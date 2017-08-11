@@ -1,6 +1,7 @@
 from lib.requests.requests import Response
 from lib.requests.requests import Session
 from LoginStepHandler import LoginStepHandler
+from BarcodeExpiredException import BarcodeExpiredException
 import time
 import random
 
@@ -47,7 +48,7 @@ class WaitForAuthHandler(LoginStepHandler):
             login_state = response.content.decode('utf-8')
             if "已失效" in login_state:
                 print("barcode fail")
-                raise Exception
+                raise BarcodeExpiredException
             if "成功" in login_state:
                 break
         login_data = login_state.split(",")

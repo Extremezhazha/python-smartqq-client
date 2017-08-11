@@ -1,0 +1,2 @@
+class BarcodeExpiredException(Exception):
+    pass

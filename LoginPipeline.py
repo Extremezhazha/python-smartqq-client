@@ -1,4 +1,5 @@
 from LoginStepHandler import LoginStepHandler
+from BarcodeExpiredException import BarcodeExpiredException
 from lib.requests import requests
 
 
@@ -18,9 +19,12 @@ class LoginPipeline:
             try:
                 for step in self.pipeline:
                     accumulated, response = step.next_step(accumulated, response)
-            except Exception as ex:
+            except BarcodeExpiredException:
                 self.session.cookies.clear()
                 self.session.headers.clear()
-                print(ex)
+                print("Barcode expired, please try again.")
                 restart = True
+            except Exception as ex:
+                print(ex)
+
         return accumulated, response
