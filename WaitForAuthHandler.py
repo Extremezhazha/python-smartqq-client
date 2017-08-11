@@ -1,10 +1,15 @@
 from lib.requests.requests import Response
+from lib.requests.requests import Session
 from LoginStepHandler import LoginStepHandler
 import time
 import random
 
 
 class WaitForAuthHandler(LoginStepHandler):
+    def __init__(self, session: Session, barcode_handler=None):
+        super().__init__(session)
+        self.barcode_handler = barcode_handler
+
     @staticmethod
     def bkn_hash(key, init_str=5381):
         hash_str = init_str
@@ -14,6 +19,8 @@ class WaitForAuthHandler(LoginStepHandler):
         return hash_str
 
     def next_step(self, accumulated, last_response: Response) -> ({}, Response):
+        if self.barcode_handler is not None:
+            self.barcode_handler(accumulated["login_barcode"])
         self.session.headers.update({"Referer": "https://ui.ptlogin2.qq.com/cgi-bin/login?daid=164&target=self&style=16"
                                                 "&mibao_css=m_webqq&appid=501004106&enable_qlogin=0&no_verifyimg=1 "
                                                 "&s_url=http%3A%2F%2Fw.qq.com%2Fproxy.html&f_url=loginerroralert "
@@ -25,15 +32,6 @@ class WaitForAuthHandler(LoginStepHandler):
             'ptcz': ('ad3bf14f9da2738e09e498bfeb93dd9da7'
                      '540dea2b7a71acfb97ed4d3da4e277')
         })
-        # ------------------------------------------------
-        # temporarily store the barcode in current folder for scanning
-        print(accumulated)
-        with open("barcode.png", "wb") as f:
-            import shutil
-            shutil.copyfileobj(accumulated["login_barcode"], f)
-        accumulated["login_barcode"].seek(0)
-        # ------------------------------------------------
-        print(self.session.headers)
         url = ('https://ssl.ptlogin2.qq.com/ptqrlogin?ptqrtoken=' +
                str(WaitForAuthHandler.bkn_hash(self.session.cookies['qrsig'], init_str=0)) +
                '&webqq_type=10&remember_uin=1&login2qq=1&aid=501004106' +
@@ -48,6 +46,7 @@ class WaitForAuthHandler(LoginStepHandler):
             response = self.session.get(url)
             login_state = response.content.decode('utf-8')
             if "已失效" in login_state:
+                print("barcode fail")
                 raise Exception
             if "成功" in login_state:
                 break

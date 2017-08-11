@@ -1,15 +1,29 @@
 from LoginPipeline import LoginPipeline
 from GetBarcodeStepHandler import GetBarcodeStepHandler
 from WaitForAuthHandler import WaitForAuthHandler
+from GetPtwebqqHandler import GetPtwebqqHandler
+from GetVfwebqqHandler import GetVfwebqqHandler
+from GetPsessionidHandler import GetPsessionidHandler
+import io
 
 
 class SmartQQLoginPipeline(LoginPipeline):
-    def __init__(self, session):
+    def __init__(self, session, barcode_handler=None):
         super().__init__(session)
-        self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36",
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        })
+        if barcode_handler is None:
+
+            def barcode_store(barcode: io.BytesIO):
+                with open("barcode.png", "wb") as barcode_file:
+                    import shutil
+                    shutil.copyfileobj(barcode, barcode_file)
+                    print("Please scan the barcode png to login")
+                    barcode.seek(0)
+
+            self.barcode_handler = barcode_store
+        else:
+            self.barcode_handler = barcode_handler
         self.add_step(GetBarcodeStepHandler(session))
-        self.add_step(WaitForAuthHandler(session))
+        self.add_step(WaitForAuthHandler(session, barcode_handler=self.barcode_handler))
+        self.add_step(GetPtwebqqHandler(session))
+        self.add_step(GetVfwebqqHandler(session))
+        self.add_step(GetPsessionidHandler(session))

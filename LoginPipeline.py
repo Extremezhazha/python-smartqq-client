@@ -18,6 +18,9 @@ class LoginPipeline:
             try:
                 for step in self.pipeline:
                     accumulated, response = step.next_step(accumulated, response)
-            except Exception:
+            except Exception as ex:
+                self.session.cookies.clear()
+                self.session.headers.clear()
+                print(ex)
                 restart = True
         return accumulated, response
