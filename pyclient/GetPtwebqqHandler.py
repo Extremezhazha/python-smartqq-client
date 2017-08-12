@@ -1,5 +1,5 @@
+from requests import Response
 from LoginStepHandler import LoginStepHandler
-from lib.requests.requests import Response
 
 
 class GetPtwebqqHandler(LoginStepHandler):

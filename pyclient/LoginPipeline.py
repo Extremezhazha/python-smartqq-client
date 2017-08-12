@@ -1,6 +1,6 @@
-from LoginStepHandler import LoginStepHandler
+import requests
 from BarcodeExpiredException import BarcodeExpiredException
-from lib.requests import requests
+from LoginStepHandler import LoginStepHandler
 
 
 class LoginPipeline:

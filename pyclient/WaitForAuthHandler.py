@@ -1,9 +1,9 @@
-from lib.requests.requests import Response
-from lib.requests.requests import Session
-from LoginStepHandler import LoginStepHandler
-from BarcodeExpiredException import BarcodeExpiredException
-from PollingHandler import PollingHandler
 import random
+from requests import Response
+from requests import Session
+from BarcodeExpiredException import BarcodeExpiredException
+from LoginStepHandler import LoginStepHandler
+from PollingHandler import PollingHandler
 
 
 class WaitForAuthHandler(LoginStepHandler):

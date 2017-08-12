@@ -1,5 +1,5 @@
-from lib.requests.requests import Response
-from lib.requests.requests import Session
+from requests import Response
+from requests import Session
 
 
 class LoginStepHandler:

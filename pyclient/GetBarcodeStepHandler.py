@@ -1,6 +1,6 @@
-from lib.requests.requests import Response
-from LoginStepHandler import LoginStepHandler
 import io
+from requests import Response
+from LoginStepHandler import LoginStepHandler
 
 
 class GetBarcodeStepHandler(LoginStepHandler):

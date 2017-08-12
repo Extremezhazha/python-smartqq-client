@@ -13,6 +13,7 @@ class PollingHandler:
         while True:
             try:
                 value = self.target()
+                print(value.content)
                 if self.value_handler(value):
                     return value
                 if self.delay is not None:

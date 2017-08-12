@@ -1,6 +1,6 @@
-from LoginStepHandler import LoginStepHandler
-from lib.requests.requests import Response
 import json
+from requests import Response
+from LoginStepHandler import LoginStepHandler
 
 
 class GetPsessionidHandler(LoginStepHandler):

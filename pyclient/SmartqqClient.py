@@ -1,7 +1,7 @@
-from SmartqqLoginPipeline import SmartqqLoginPipeline
-from PollingHandler import PollingHandler
-from lib.requests import requests
 import json
+import requests
+from PollingHandler import PollingHandler
+from SmartqqLoginPipeline import SmartqqLoginPipeline
 
 
 class SmartqqClient:
@@ -9,10 +9,10 @@ class SmartqqClient:
         print(x.json())
         return self.stopped
 
-    def __init__(self, barcode_handler=None, message_handler=print_response_and_check):
+    def __init__(self, barcode_handler=None, message_handler=None):
         self.session = requests.Session()
         self.login_pipeline = SmartqqLoginPipeline(self.session, barcode_handler)
-        self.message_handler = message_handler
+        self.message_handler = message_handler if message_handler is not None else self.print_response_and_check
         self.stopped = False
 
     def run(self):
