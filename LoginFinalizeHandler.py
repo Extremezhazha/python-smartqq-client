@@ -1,0 +1,17 @@
+from LoginStepHandler import LoginStepHandler
+from lib.requests.requests import Response
+
+
+class LoginFinalizeHandler(LoginStepHandler):
+    def next_step(self, accumulated, last_response: Response) -> ({}, Response):
+        del accumulated["login_barcode"]
+        self.session.headers.update({"Referer": "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2"})
+        self.session.headers.update({"Origin": "http://d1.web2.qq.com"})
+        url = (
+            "http://d1.web2.qq.com/channel/get_online_buddies2?vfwebqq=" +
+            accumulated["vfwebqq"] +
+            "&clientid=53999199&psessionid=" +
+            accumulated["psessionid"] +
+            "&t=0.1"
+        )
+        return accumulated, self.session.get(url)

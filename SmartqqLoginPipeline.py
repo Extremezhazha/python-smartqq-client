@@ -4,10 +4,11 @@ from WaitForAuthHandler import WaitForAuthHandler
 from GetPtwebqqHandler import GetPtwebqqHandler
 from GetVfwebqqHandler import GetVfwebqqHandler
 from GetPsessionidHandler import GetPsessionidHandler
+from LoginFinalizeHandler import LoginFinalizeHandler
 import io
 
 
-class SmartQQLoginPipeline(LoginPipeline):
+class SmartqqLoginPipeline(LoginPipeline):
     def __init__(self, session, barcode_handler=None):
         super().__init__(session)
         if barcode_handler is None:
@@ -27,3 +28,4 @@ class SmartQQLoginPipeline(LoginPipeline):
         self.add_step(GetPtwebqqHandler(session))
         self.add_step(GetVfwebqqHandler(session))
         self.add_step(GetPsessionidHandler(session))
+        self.add_step(LoginFinalizeHandler(session))

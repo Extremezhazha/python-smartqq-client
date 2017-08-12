@@ -1,7 +1,9 @@
-from SmartQQLoginPipeline import SmartQQLoginPipeline
+from SmartqqLoginPipeline import SmartqqLoginPipeline
+from SmartqqHash import smartqq_hash
 import requests
-import shutil
+import json
+from SmartqqClient import SmartqqClient
 
 if __name__ == '__main__':
-    accumulated, response = SmartQQLoginPipeline(requests.Session()).run()
-    print(accumulated)
+    client = SmartqqClient()
+    client.run()

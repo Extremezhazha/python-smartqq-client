@@ -2,7 +2,7 @@ from lib.requests.requests import Response
 from lib.requests.requests import Session
 from LoginStepHandler import LoginStepHandler
 from BarcodeExpiredException import BarcodeExpiredException
-import time
+from PollingHandler import PollingHandler
 import random
 
 
@@ -42,16 +42,25 @@ class WaitForAuthHandler(LoginStepHandler):
                repr(random.random() * 900000 + 1000000) +
                '&mibao_css=m_webqq&t=undefined&g=1&js_type=0' +
                '&js_ver=10141&login_sig=&pt_randsalt=0')
-        while True:
-            time.sleep(3)
-            response = self.session.get(url)
-            login_state = response.content.decode('utf-8')
+
+        def response_handler(response: Response):
+            login_state = response.content.decode("utf-8")
             if "已失效" in login_state:
                 print("barcode fail")
                 raise BarcodeExpiredException
             if "成功" in login_state:
-                break
-        login_data = login_state.split(",")
-        accumulated["login_success_url"] = login_data[2][1:-1]
-        accumulated["user_name"] = login_data[-1][2:-5]
+                login_data = login_state.split(",")
+                nonlocal accumulated
+                accumulated["login_success_url"] = login_data[2][1:-1]
+                accumulated["user_name"] = login_data[-1][2:-5]
+                return True
+            return False
+
+        response = PollingHandler(
+            lambda: self.session.get(url),
+            response_handler,
+            delay=3,
+            pass_through_exceptions=(BarcodeExpiredException,),
+            exception_handler=lambda ex: print(ex)
+        ).run()
         return accumulated, response
