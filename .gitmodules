@@ -1,6 +1,0 @@
-[submodule "lib/requests"]
-	path = lib/requests
-	url = https://github.com/requests/requests
-[submodule "lib/mongo-python-driver"]
-	path = lib/mongo-python-driver
-	url = https://github.com/mongodb/mongo-python-driver
