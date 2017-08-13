@@ -8,3 +8,6 @@ class ContactDatabaseManager:
 
     def clear(self):
         self.mongo_collection.drop()
+
+    def update(self):
+        pass
