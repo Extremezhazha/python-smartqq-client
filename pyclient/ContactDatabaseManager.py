@@ -1,7 +1,10 @@
 import pymongo
+from pymongo import database
 
 
 class ContactDatabaseManager:
-    def __init__(self, mongodb_host="127.0.0.1", mongodb_port=27017):
-        self.mongo_client = pymongo.MongoClient(mongodb_host, mongodb_port)
-        pass
+    def __init__(self, mongo_database: database.Database, collection_string="contact"):
+        self.mongo_collection = mongo_database[collection_string]
+
+    def clear(self):
+        self.mongo_collection.drop()

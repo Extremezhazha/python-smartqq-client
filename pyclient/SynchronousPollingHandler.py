@@ -1,5 +1,5 @@
 from multiprocessing import Process
-from PollingHandler import PollingHandler
+from .PollingHandler import PollingHandler
 
 
 class SynchronousPollingHandler:

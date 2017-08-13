@@ -1,9 +1,9 @@
 import random
 from requests import Response
 from requests import Session
-from BarcodeExpiredException import BarcodeExpiredException
-from LoginStepHandler import LoginStepHandler
-from PollingHandler import PollingHandler
+from .BarcodeExpiredException import BarcodeExpiredException
+from .LoginStepHandler import LoginStepHandler
+from .PollingHandler import PollingHandler
 
 
 class WaitForAuthHandler(LoginStepHandler):

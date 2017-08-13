@@ -1,7 +1,7 @@
 import json
 import requests
-from PollingHandler import PollingHandler
-from SmartqqLoginPipeline import SmartqqLoginPipeline
+from .PollingHandler import PollingHandler
+from .SmartqqLoginPipeline import SmartqqLoginPipeline
 
 
 class SmartqqClient:

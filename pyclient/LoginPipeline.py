@@ -1,6 +1,6 @@
 import requests
-from BarcodeExpiredException import BarcodeExpiredException
-from LoginStepHandler import LoginStepHandler
+from .BarcodeExpiredException import BarcodeExpiredException
+from .LoginStepHandler import LoginStepHandler
 
 
 class LoginPipeline:

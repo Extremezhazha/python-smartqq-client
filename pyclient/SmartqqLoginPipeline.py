@@ -1,11 +1,11 @@
 import io
-from GetBarcodeStepHandler import GetBarcodeStepHandler
-from GetPsessionidHandler import GetPsessionidHandler
-from GetPtwebqqHandler import GetPtwebqqHandler
-from GetVfwebqqHandler import GetVfwebqqHandler
-from LoginPipeline import LoginPipeline
-from WaitForAuthHandler import WaitForAuthHandler
-from LoginFinalizeHandler import LoginFinalizeHandler
+from .GetBarcodeStepHandler import GetBarcodeStepHandler
+from .GetPsessionidHandler import GetPsessionidHandler
+from .GetPtwebqqHandler import GetPtwebqqHandler
+from .GetVfwebqqHandler import GetVfwebqqHandler
+from .LoginPipeline import LoginPipeline
+from .WaitForAuthHandler import WaitForAuthHandler
+from .LoginFinalizeHandler import LoginFinalizeHandler
 
 
 class SmartqqLoginPipeline(LoginPipeline):
