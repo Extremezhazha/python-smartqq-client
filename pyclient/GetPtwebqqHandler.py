@@ -7,4 +7,5 @@ class GetPtwebqqHandler(LoginStepHandler):
         self.session.headers.update({"Referer": "http://s.web2.qq.com/proxy.html?v=20130916001&callback=1&id=1"})
         response = self.session.get(accumulated["login_success_url"])
         accumulated["ptwebqq"] = self.session.cookies.get("ptwebqq")
+        print("ptwebqq dong")
         return accumulated, response

@@ -1,13 +1,73 @@
-import pymongo
 from pymongo import database
+from .SmartqqDatabaseManager import SmartqqDatabaseManager
+from requests import Session
+from . import SmartqqHash
+from .UnknownUserException import UnknownUserException
+import json
 
 
-class ContactDatabaseManager:
-    def __init__(self, mongo_database: database.Database, collection_string="contact"):
-        self.mongo_collection = mongo_database[collection_string]
+class ContactDatabaseManager(SmartqqDatabaseManager):
+    def __init__(self, mongo_database: database.Database, login_data: {},
+                 session: Session, contact_collection_string="contact",
+                 category_collection_string="category", identify_string="global"):
+        super().__init__(mongo_database, login_data)
+        self.contact_collection = self.mongo_database[contact_collection_string]
+        self.category_collection = self.mongo_database[category_collection_string]
+        self.session = session
+        self.identify_string = identify_string
+        self.data_r = {
+            "vfwebqq": login_data["vfwebqq"],
+            "hash": SmartqqHash.smartqq_hash(login_data["uin"], login_data["ptwebqq"])
+        }
 
     def clear(self):
-        self.mongo_collection.drop()
+        self.contact_collection.delete_many({"identify_string": self.identify_string})
+        self.category_collection.delete_many({"identify_string": self.identify_string})
 
-    def update(self):
-        pass
+    def get_data(self):
+        print("refreshing contact data")
+        self.clear()
+        self.session.headers.update({"Referer": "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2"})
+        self.session.headers.update({"Origin": "http://d1.web2.qq.com"})
+        result = self.session.post(
+            "http://s.web2.qq.com/api/get_user_friends2",
+            data={"r": json.dumps(self.data_r)}
+        ).json()["result"]
+        friends = result["friends"]
+        marknames = result["marknames"]
+        info = result["info"]
+        self.session.headers.update({"Referer": "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2"})
+        for contact in friends:
+            self.contact_collection.insert_one({
+                "uin": contact["uin"],
+                "identify_string": self.identify_string,
+                "category_id": contact["categories"]
+            })
+        for contact in marknames:
+            self.contact_collection.update_one({"uin": contact["uin"], "identify_string": self.identify_string},
+                                               {"$set": {"marked_name": contact["markname"]}})
+        for contact in info:
+            self.contact_collection.update_one({"uin": contact["uin"], "identify_string": self.identify_string},
+                                               {"$set": {"name": contact["nick"]}})
+        categories = result["categories"]
+        for category in categories:
+            self.category_collection.insert_one({
+                "identify_string": self.identify_string,
+                "index": category["index"],
+                "sort": category["sort"],
+                "name": category["name"]
+            })
+
+    def get_contact(self, uin: str, retrying=False):
+        print(uin)
+        contact = self.contact_collection.find_one({"uin": uin, "identify_string": self.identify_string})
+        if contact is None:
+            if retrying:
+                return None  # since the group part is yet to be implemented
+                # raise UnknownUserException
+            self.get_data()
+            return self.get_contact(uin, retrying=True)
+        contact["category_name"] = self.category_collection.find_one({
+            "index": contact["category_id"], "identify_string": self.identify_string
+        })["name"]
+        return contact

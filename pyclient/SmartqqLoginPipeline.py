@@ -6,6 +6,7 @@ from .GetVfwebqqHandler import GetVfwebqqHandler
 from .LoginPipeline import LoginPipeline
 from .WaitForAuthHandler import WaitForAuthHandler
 from .LoginFinalizeHandler import LoginFinalizeHandler
+from .LoginSetupHandler import LoginSetupHandler
 
 
 class SmartqqLoginPipeline(LoginPipeline):
@@ -23,6 +24,7 @@ class SmartqqLoginPipeline(LoginPipeline):
             self.barcode_handler = barcode_store
         else:
             self.barcode_handler = barcode_handler
+        self.add_step(LoginSetupHandler(session))
         self.add_step(GetBarcodeStepHandler(session))
         self.add_step(WaitForAuthHandler(session, barcode_handler=self.barcode_handler))
         self.add_step(GetPtwebqqHandler(session))

@@ -1,0 +1,2 @@
+class FaultyLoginDataException(Exception):
+    pass
