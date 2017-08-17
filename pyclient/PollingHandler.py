@@ -18,7 +18,7 @@ class PollingHandler:
                 if self.delay is not None:
                     time.sleep(self.delay)
             except Exception as ex:
-                if self.pass_through_exceptions is None or ex.__class__ in self.pass_through_exceptions:
+                if (self.pass_through_exceptions is None) or (ex.__class__ in self.pass_through_exceptions):
                     raise ex
                 else:
                     if self.exception_handler is not None:

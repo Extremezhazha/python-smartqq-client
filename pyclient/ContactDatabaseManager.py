@@ -25,7 +25,6 @@ class ContactDatabaseManager(SmartqqDatabaseManager):
         self.category_collection.delete_many({"identify_string": self.identify_string})
 
     def get_data(self):
-        print("refreshing contact data")
         self.clear()
         self.session.headers.update({"Referer": "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2"})
         self.session.headers.update({"Origin": "http://d1.web2.qq.com"})
@@ -58,15 +57,13 @@ class ContactDatabaseManager(SmartqqDatabaseManager):
                 "name": category["name"]
             })
 
-    def get_contact(self, uin: str, retrying=False):
-        print(uin)
+    def get_contact_info(self, uin, retrying=False):
         contact = self.contact_collection.find_one({"uin": uin, "identify_string": self.identify_string})
         if contact is None:
             if retrying:
-                return None  # since the group part is yet to be implemented
-                # raise UnknownUserException
+                raise UnknownUserException
             self.get_data()
-            return self.get_contact(uin, retrying=True)
+            return self.get_contact_info(uin, retrying=True)
         contact["category_name"] = self.category_collection.find_one({
             "index": contact["category_id"], "identify_string": self.identify_string
         })["name"]
