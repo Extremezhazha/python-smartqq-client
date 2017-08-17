@@ -22,6 +22,7 @@ class SmartqqMessageHandler(MessageHandler):
 
     @staticmethod
     def any_message_handler(message):
+        print(message)
         print("this message has been ignored")
         return False
 

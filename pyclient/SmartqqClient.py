@@ -90,7 +90,7 @@ class SmartqqClient:
                 data={"r": json.dumps(data_r)}
             )
 
-        logger.info("Starting polling")
+        logger.info("Starting polling for messages")
         polling = PollingHandler(message_grabber, self.message_handler,
                                  pass_through_exceptions=[FaultyLoginDataException])
         polling.run()

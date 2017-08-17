@@ -1,6 +1,7 @@
 import json
 from requests import Response
 from .LoginStepHandler import LoginStepHandler
+from .Logger import logger
 
 
 class GetPsessionidHandler(LoginStepHandler):
@@ -18,5 +19,5 @@ class GetPsessionidHandler(LoginStepHandler):
         response_data = response.json()
         accumulated["uin"] = response_data["result"]["uin"]
         accumulated["psessionid"] = response_data["result"]["psessionid"]
-        print("psession done")
+        logger.info("Psessionid and uin step finished")
         return accumulated, response

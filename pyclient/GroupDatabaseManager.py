@@ -42,7 +42,6 @@ class GroupDatabaseManager(SmartqqDatabaseManager):
             self.group_collection.insert_one({"code": group["code"], "gid": group["gid"],
                                               "identify_string": self.identify_string,
                                               "name": group["name"]})
-        print(result)
 
     def get_group_member_data(self, gcode: str, gid: str):
         self.mem_clear(gid)

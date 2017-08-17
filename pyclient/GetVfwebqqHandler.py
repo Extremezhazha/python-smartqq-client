@@ -1,5 +1,6 @@
 from requests import Response
 from .LoginStepHandler import LoginStepHandler
+from .Logger import logger
 
 
 class GetVfwebqqHandler(LoginStepHandler):
@@ -9,5 +10,5 @@ class GetVfwebqqHandler(LoginStepHandler):
         response = self.session.get("http://s.web2.qq.com/api/getvfwebqq?ptwebqq=" + accumulated["ptwebqq"] +
                                     "&clientid=" + str(accumulated["clientid"]) + "psessionid=&t=0.1")
         accumulated["vfwebqq"] = response.json()["result"]["vfwebqq"]
-        print("vfwebqq dong")
+        logger.info("Vfwebqq step done")
         return accumulated, response

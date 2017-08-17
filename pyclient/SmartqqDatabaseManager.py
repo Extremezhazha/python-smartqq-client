@@ -5,7 +5,6 @@ from .FaultyLoginDataException import FaultyLoginDataException
 class SmartqqDatabaseManager:
     @staticmethod
     def check_login_data_exist(data: {str: str}):
-        print(data)
         return (
             "uin" in data and
             "psessionid" in data and
