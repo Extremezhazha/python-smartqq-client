@@ -61,6 +61,6 @@ class WaitForAuthHandler(LoginStepHandler):
             response_handler,
             delay=3,
             pass_through_exceptions=(BarcodeExpiredException,),
-            exception_handler=lambda ex: print(ex)
+            exception_handler=lambda ex: (print(ex), False)[1]
         ).run()
         return accumulated, response

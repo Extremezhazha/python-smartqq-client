@@ -29,9 +29,8 @@ class SmartqqLoginPipeline(LoginPipeline):
             barcode.seek(0)
 
     def __init__(self, session, barcode_handler=None, exception_handler=None):
-        if exception_handler is None:
-            exception_handler = SmartqqLoginPipeline.default_exception_handler
-        super().__init__(session, exception_handler)
+        super().__init__(session, (exception_handler if exception_handler is not None
+                                   else SmartqqLoginPipeline.default_exception_handler))
         self.add_step(LoginSetupHandler(session))
         self.add_step(GetBarcodeStepHandler(session))
         self.add_step(WaitForAuthHandler(

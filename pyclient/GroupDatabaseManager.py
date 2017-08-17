@@ -47,7 +47,7 @@ class GroupDatabaseManager(SmartqqDatabaseManager):
         self.mem_clear(gid)
         self.session.headers.update({"Referer": "http://s.web2.qq.com/proxy.html?v=20130916001&callback=1&id=1"})
         result = self.session.get("http://s.web2.qq.com/api/get_group_info_ext2?gcode=" +
-                                  gcode +
+                                  str(gcode) +
                                   "&vfwebqq=" +
                                   self.login_data["vfwebqq"] +
                                   "&t=0.1").json()["result"]
@@ -59,6 +59,15 @@ class GroupDatabaseManager(SmartqqDatabaseManager):
                 "uin": member["uin"],
                 "identify_string": self.identify_string
             })
+        if "cards" in result:
+            cards = result["cards"]
+            for card in cards:
+                self.group_member_collection.update_one({
+                    "gid": gid,
+                    "uin": card["muin"],
+                    "identify_string": self.identify_string
+                }, {"$set": {"marked_name": card["card"]}}
+                )
 
     def get_group_info(self, gid, retrying=False):
         group = self.group_collection.find_one({"gid": gid, "identify_string": self.identify_string})
@@ -77,5 +86,5 @@ class GroupDatabaseManager(SmartqqDatabaseManager):
                 raise UnknownUserException
             group = self.get_group_info(gid)
             self.get_group_member_data(group["code"], group["gid"])
-            return self.get_group_info(gid, retrying=True)
+            return self.get_member_info(gid, uin, retrying=True)
         return member

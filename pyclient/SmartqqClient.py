@@ -21,6 +21,32 @@ class SmartqqClient:
         return lambda message: ((orig_handler(message, self.env) if self.passing_env else orig_handler(message)),
                                 self.stopped)[1]
 
+    @staticmethod
+    def get_group_name(group_info):
+        return group_info["name"]
+
+    @staticmethod
+    def get_user_name(user_info):
+        if "marked_name" in user_info:
+            result = user_info["marked_name"] + "(" + user_info["name"] + ")"
+        else:
+            result = user_info["name"]
+        return result
+
+    @staticmethod
+    def get_message_content(message):
+        content = message["content"]
+        if len(content) < 2:
+            return "Unsupported message"
+        else:
+            result = "".join(
+                map(
+                    lambda x: x if x.__class__ == str else json.dumps(x),
+                    content[1:]
+                )
+            )
+            return result
+
     def print_response_and_check(self, x):
         response_json = x.json()
         if "errmsg" in response_json:
@@ -32,12 +58,24 @@ class SmartqqClient:
 
     def default_friend_message_handler(self, message):
         content = message["value"]
-        logger.info(self.contact_manager.get_contact_info(content["from_uin"]))
-        logger.info(content["content"][-1])
+        logger.info(
+            SmartqqClient.get_user_name(self.contact_manager.get_contact_info(content["from_uin"])) +
+            " sent a message: " +
+            SmartqqClient.get_message_content(content)
+        )
         return self.stopped
 
     def default_group_message_handler(self, message):
-        logger.info("this is a group message")
+        content = message["value"]
+        logger.info(
+            SmartqqClient.get_user_name(
+                self.group_manager.get_member_info(content["from_uin"], content["send_uin"])
+            ) + " from group " +
+            SmartqqClient.get_group_name(
+                self.group_manager.get_group_info(content["from_uin"])
+            ) + " sent a message: " +
+            SmartqqClient.get_message_content(content)
+        )
         return self.stopped
 
     def __init__(self, login_data=None, barcode_handler=None,
@@ -92,5 +130,11 @@ class SmartqqClient:
 
         logger.info("Starting polling for messages")
         polling = PollingHandler(message_grabber, self.message_handler,
-                                 pass_through_exceptions=[FaultyLoginDataException])
+                                 pass_through_exceptions={}, exception_handler=lambda ex: (
+                logger.error("raised {exception_class} ({exception_docstring}): {exception_message}"
+                             .format(exception_class=ex.__class__,
+                                     exception_docstring=ex.__doc__,
+                                     exception_message=str(ex)
+                                     ))
+                , False)[1])
         polling.run()

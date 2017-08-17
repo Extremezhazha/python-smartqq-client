@@ -22,4 +22,5 @@ class PollingHandler:
                     raise ex
                 else:
                     if self.exception_handler is not None:
-                        self.exception_handler(ex)
+                        if self.exception_handler(ex):
+                            return ex

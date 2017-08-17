@@ -49,12 +49,22 @@ class ContactDatabaseManager(SmartqqDatabaseManager):
             self.contact_collection.update_one({"uin": contact["uin"], "identify_string": self.identify_string},
                                                {"$set": {"name": contact["nick"]}})
         categories = result["categories"]
+        root_added = False
         for category in categories:
+            if category["index"] == 0:
+                root_added = True
             self.category_collection.insert_one({
                 "identify_string": self.identify_string,
                 "index": category["index"],
                 "sort": category["sort"],
                 "name": category["name"]
+            })
+        if not root_added:
+            self.category_collection.insert_one({
+                "identify_string": self.identify_string,
+                "index": 0,
+                "sort": 0,
+                "name": "My Friends"
             })
 
     def get_contact_info(self, uin, retrying=False):
@@ -64,7 +74,13 @@ class ContactDatabaseManager(SmartqqDatabaseManager):
                 raise UnknownUserException
             self.get_data()
             return self.get_contact_info(uin, retrying=True)
-        contact["category_name"] = self.category_collection.find_one({
+        category = self.category_collection.find_one({
             "index": contact["category_id"], "identify_string": self.identify_string
-        })["name"]
+        })
+        if category is None:
+            if retrying:
+                raise UnknownUserException
+            self.get_data()
+            return self.get_contact_info(uin, retrying=True)
+        contact["category_name"] = category["name"]
         return contact

@@ -8,7 +8,7 @@ class SmartqqMessageHandler(MessageHandler):
 
     @staticmethod
     def group_message_filter(message):
-        return message["poll_type"] == "group_message_filter"
+        return message["poll_type"] == "group_message"
 
     @staticmethod
     def friend_message_print_handler(message):
@@ -22,7 +22,6 @@ class SmartqqMessageHandler(MessageHandler):
 
     @staticmethod
     def any_message_handler(message):
-        print(message)
         print("this message has been ignored")
         return False
 
