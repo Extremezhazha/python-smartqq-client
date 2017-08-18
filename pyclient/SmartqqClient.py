@@ -12,12 +12,6 @@ from .Logger import logger
 
 class SmartqqClient:
     def handler_wrapper(self, orig_handler):
-        #
-        # def result_handler(message):
-        #     orig_handler(message)
-        #     return self.stopped
-        # return result_handler
-        # return lambda message: (orig_handler(message) or self.stopped)
         return lambda message: ((orig_handler(message, self.env) if self.passing_env else orig_handler(message)),
                                 self.stopped)[1]
 
@@ -63,6 +57,12 @@ class SmartqqClient:
             " sent a message: " +
             SmartqqClient.get_message_content(content)
         )
+        return self.stopped
+
+    def friend_message_echo_handler(self, message):
+        self.default_friend_message_handler(message)
+        content = message["value"]
+        self.send_message(content["from_uin"], SmartqqClient.get_message_content(content))
         return self.stopped
 
     def default_group_message_handler(self, message):
@@ -129,12 +129,54 @@ class SmartqqClient:
             )
 
         logger.info("Starting polling for messages")
-        polling = PollingHandler(message_grabber, self.message_handler,
-                                 pass_through_exceptions={}, exception_handler=lambda ex: (
+        polling = PollingHandler(
+            message_grabber, self.message_handler,
+            pass_through_exceptions={},
+            exception_handler=lambda ex: (
                 logger.error("raised {exception_class} ({exception_docstring}): {exception_message}"
                              .format(exception_class=ex.__class__,
                                      exception_docstring=ex.__doc__,
                                      exception_message=str(ex)
                                      ))
-                , False)[1])
+                , False)[1]
+        )
         polling.run()
+
+    def get_sending_data_r(self, to_name, to_id, message):
+        data_content = [
+            message,
+            [
+                "font",
+                {
+                    "name": "宋体",
+                    "size": 10,
+                    "style": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "color": "000000"
+                }
+            ]
+        ]
+        data_r = {
+            to_name: to_id,
+            "content": json.dumps(data_content),
+            "face": 522,
+            "clientid": self.login_data["clientid"],
+            "msg_id": 65890001,
+            "psessionid": self.login_data["psessionid"]
+        }
+        return data_r
+
+    def send_message(self, uin, message):
+        data_r = self.get_sending_data_r("to", uin, message)
+        self.session.headers.update({"Referer": "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2"})
+        self.session.headers.update({"Origin": "http://d1.web2.qq.com"})
+        return self.session.post("http://d1.web2.qq.com/channel/send_buddy_msg2", data={"r": json.dumps(data_r)}).json()
+
+    def send_group_message(self, gid, message):
+        data_r = self.get_sending_data_r("group_uin", gid, message)
+        self.session.headers.update({"Referer": "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2"})
+        self.session.headers.update({"Origin": "http://d1.web2.qq.com"})
+        return self.session.post("http://d1.web2.qq.com/channel/send_qun_msg2", data={"r": json.dumps(data_r)}).content
