@@ -1,4 +1,4 @@
-from .SmartqqDatabaseManager import SmartqqDatabaseManager
+from .DatabaseManager import DatabaseManager
 from pymongo import database
 from requests import Session
 from . import SmartqqHash
@@ -6,7 +6,7 @@ from .UnknownUserException import UnknownUserException
 import json
 
 
-class GroupDatabaseManager(SmartqqDatabaseManager):
+class GroupDatabaseManager(DatabaseManager):
     def __init__(self, mongo_database: database.Database, login_data: {}, session: Session,
                  group_collection_string="groups", group_member_collection_string="group_member",
                  identify_string="global"):
@@ -28,6 +28,10 @@ class GroupDatabaseManager(SmartqqDatabaseManager):
 
     def mem_clear_all(self):
         self.group_member_collection.delete_many({"identify_string": self.identify_string})
+
+    def clear_all(self):
+        self.clear()
+        self.mem_clear_all()
 
     def get_data(self):
         self.clear()

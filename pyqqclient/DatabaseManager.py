@@ -2,7 +2,7 @@ from pymongo import database
 from .FaultyLoginDataException import FaultyLoginDataException
 
 
-class SmartqqDatabaseManager:
+class DatabaseManager:
     @staticmethod
     def check_login_data_exist(data: {str: str}):
         return (
@@ -14,7 +14,7 @@ class SmartqqDatabaseManager:
         )
 
     def __init__(self, mongo_database: database.Database, login_data: {}):
-        if not SmartqqDatabaseManager.check_login_data_exist(login_data):
+        if not DatabaseManager.check_login_data_exist(login_data):
             raise FaultyLoginDataException
         else:
             self.login_data = login_data

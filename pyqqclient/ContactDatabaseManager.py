@@ -1,12 +1,12 @@
 from pymongo import database
-from .SmartqqDatabaseManager import SmartqqDatabaseManager
+from .DatabaseManager import DatabaseManager
 from requests import Session
 from . import SmartqqHash
 from .UnknownUserException import UnknownUserException
 import json
 
 
-class ContactDatabaseManager(SmartqqDatabaseManager):
+class ContactDatabaseManager(DatabaseManager):
     def __init__(self, mongo_database: database.Database, login_data: {},
                  session: Session, contact_collection_string="contact",
                  category_collection_string="category", identify_string="global"):

@@ -6,7 +6,6 @@ from .SmartqqLoginPipeline import SmartqqLoginPipeline
 from .ContactDatabaseManager import ContactDatabaseManager
 from .GroupDatabaseManager import GroupDatabaseManager
 from .SmartqqMessageHandler import SmartqqMessageHandler
-from .FaultyLoginDataException import FaultyLoginDataException
 from .Logger import logger
 
 
@@ -79,7 +78,8 @@ class SmartqqClient:
         return self.stopped
 
     def __init__(self, login_data=None, barcode_handler=None,
-                 friend_message_handler=None, group_message_handler=None, passing_env=False):
+                 friend_message_handler=None, group_message_handler=None, passing_env=False,
+                 db_identify_string=None):
         self.session = requests.Session()
         self.login_pipeline = SmartqqLoginPipeline(self.session, barcode_handler)
         self.friend_message_handler = (
@@ -100,6 +100,7 @@ class SmartqqClient:
         self.contact_manager = None
         self.group_manager = None
         self.login_data = login_data
+        self.db_identify_string = db_identify_string
 
     def login(self):
         self.login_data, dispose = self.login_pipeline.run()
@@ -108,9 +109,11 @@ class SmartqqClient:
         if self.login_data is None:
             self.login()
         contact_db = pymongo.MongoClient()["python-smartqq-client"]
-        self.contact_manager = ContactDatabaseManager(contact_db, self.login_data, self.session)
+        self.contact_manager = ContactDatabaseManager(contact_db, self.login_data, self.session,
+                                                      identify_string=self.db_identify_string)
         # self.contact_manager.get_data()
-        self.group_manager = GroupDatabaseManager(contact_db, self.login_data, self.session)
+        self.group_manager = GroupDatabaseManager(contact_db, self.login_data, self.session,
+                                                  identify_string=self.db_identify_string)
         # self.group_manager.get_data()
         self.env["contact_manager"] = self.contact_manager
         self.env["group_manager"] = self.group_manager
@@ -180,3 +183,7 @@ class SmartqqClient:
         self.session.headers.update({"Referer": "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2"})
         self.session.headers.update({"Origin": "http://d1.web2.qq.com"})
         return self.session.post("http://d1.web2.qq.com/channel/send_qun_msg2", data={"r": json.dumps(data_r)}).content
+
+    def db_clear_all(self):
+        self.group_manager.clear_all()
+        self.contact_manager.clear()

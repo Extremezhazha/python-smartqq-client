@@ -1,4 +1,4 @@
-from pyclient.SmartqqClient import SmartqqClient
+from pyqqclient.SmartqqClient import SmartqqClient
 from threading import Thread
 import time
 
