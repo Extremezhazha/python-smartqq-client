@@ -79,9 +79,12 @@ class SmartqqClient:
 
     def __init__(self, login_data=None, barcode_handler=None,
                  friend_message_handler=None, group_message_handler=None, passing_env=False,
+                 login_done_handler=None, login_exception_handler=None,
                  db_identify_string=None):
         self.session = requests.Session()
-        self.login_pipeline = SmartqqLoginPipeline(self.session, barcode_handler)
+        self.login_pipeline = SmartqqLoginPipeline(
+            self.session, barcode_handler, exception_handler=login_exception_handler
+        )
         self.friend_message_handler = (
             self.handler_wrapper(friend_message_handler) if friend_message_handler is not None
             else self.default_friend_message_handler
@@ -101,6 +104,7 @@ class SmartqqClient:
         self.group_manager = None
         self.login_data = login_data
         self.db_identify_string = db_identify_string
+        self.login_done_handler = login_done_handler
 
     def login(self):
         self.login_data, dispose = self.login_pipeline.run()
@@ -117,6 +121,8 @@ class SmartqqClient:
         # self.group_manager.get_data()
         self.env["contact_manager"] = self.contact_manager
         self.env["group_manager"] = self.group_manager
+        if self.login_done_handler is not None:
+            self.login_done_handler()
 
         def message_grabber():
             self.session.headers.update({"Referer": "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2"})
