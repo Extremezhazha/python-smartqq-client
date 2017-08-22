@@ -84,3 +84,7 @@ class ContactDatabaseManager(DatabaseManager):
             return self.get_contact_info(uin, retrying=True)
         contact["category_name"] = category["name"]
         return contact
+
+    def get_contacts_info(self):
+        self.get_data()
+        return self.contact_collection.find({"identify_string": self.identify_string})

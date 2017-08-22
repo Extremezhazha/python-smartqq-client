@@ -92,3 +92,7 @@ class GroupDatabaseManager(DatabaseManager):
             self.get_group_member_data(group["code"], group["gid"])
             return self.get_member_info(gid, uin, retrying=True)
         return member
+
+    def get_groups_info(self):
+        self.get_data()
+        return self.group_collection.find({"identify_string": self.identify_string})
