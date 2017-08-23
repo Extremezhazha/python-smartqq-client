@@ -1,6 +1,6 @@
 from setuptools import setup
 
-version = "0.3.3"
+version = "0.3.7"
 setup(
     name="python-smartqq-client",
     version=version,

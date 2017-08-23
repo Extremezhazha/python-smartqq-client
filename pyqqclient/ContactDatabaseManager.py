@@ -88,3 +88,13 @@ class ContactDatabaseManager(DatabaseManager):
     def get_contacts_info(self):
         self.get_data()
         return self.contact_collection.find({"identify_string": self.identify_string})
+
+    def get_categories_info(self):
+        self.get_data()
+        return self.category_collection.find({"identify_string": self.identify_string})
+
+    def get_contacts_info_in_category(self, category_id: int):
+        return self.contact_collection.find({
+            "identify_string": self.identify_string,
+            "category_id": category_id
+        })

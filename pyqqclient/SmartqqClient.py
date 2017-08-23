@@ -27,7 +27,7 @@ class SmartqqClient:
         return result
 
     @staticmethod
-    def get_message_content(message):
+    def get_message_content(message) -> str:
         content = message["content"]
         if len(content) < 2:
             return "Unsupported message"
@@ -147,7 +147,7 @@ class SmartqqClient:
                                      exception_docstring=ex.__doc__,
                                      exception_message=str(ex)
                                      ))
-                , False)[1]
+                , self.stopped)[1]
         )
         polling.run()
 
