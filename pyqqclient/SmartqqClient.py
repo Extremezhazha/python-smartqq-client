@@ -7,12 +7,17 @@ from .ContactDatabaseManager import ContactDatabaseManager
 from .GroupDatabaseManager import GroupDatabaseManager
 from .SmartqqMessageHandler import SmartqqMessageHandler
 from .Logger import logger
+from .MessageErrcodeException import MessageErrcodeException
+from .OnlineChecker import OnlineChecker
 
 
 class SmartqqClient:
     def handler_wrapper(self, orig_handler):
         return lambda message: ((orig_handler(message, self.env) if self.passing_env else orig_handler(message)),
                                 self.stopped)[1]
+
+    def raw_handler_wrapper(self, orig_handler):
+        return lambda info: (orig_handler(info), self.stopped)[1]
 
     @staticmethod
     def get_group_name(group_info):
@@ -45,8 +50,6 @@ class SmartqqClient:
         if "errmsg" in response_json:
             return self.stopped
         message = response_json["result"][0]["value"]
-        print(self.contact_manager.get_contact_info(message["from_uin"]))
-        print(message["content"][-1])
         return self.stopped
 
     def default_friend_message_handler(self, message):
@@ -77,13 +80,25 @@ class SmartqqClient:
         )
         return self.stopped
 
+    def message_preprocess(self, data):
+        message = data.json()
+        if ("retcode" in message) and message["retcode"] != 0:
+            if message["retcode"] == 103:
+                logger.info(OnlineChecker.check_online(self.login_data, self.session).content)
+            raise MessageErrcodeException
+        if "result" not in message:
+            raise MessageErrcodeException
+        return message["result"][0]
+
     def __init__(self, login_data=None, barcode_handler=None,
                  friend_message_handler=None, group_message_handler=None, passing_env=False,
                  login_done_handler=None, login_exception_handler=None,
                  db_identify_string=None):
         self.session = requests.Session()
         self.login_pipeline = SmartqqLoginPipeline(
-            self.session, barcode_handler, exception_handler=login_exception_handler
+            self.session,
+            self.raw_handler_wrapper(barcode_handler) if barcode_handler is not None else barcode_handler,
+            exception_handler=login_exception_handler
         )
         self.friend_message_handler = (
             self.handler_wrapper(friend_message_handler) if friend_message_handler is not None
@@ -94,6 +109,7 @@ class SmartqqClient:
             else self.default_group_message_handler
         )
         self.message_handler = SmartqqMessageHandler.print_all_handler(
+            message_preprocess=self.message_preprocess,
             friend_message_handler=self.friend_message_handler,
             group_message_handler=self.group_message_handler
         )
@@ -112,13 +128,13 @@ class SmartqqClient:
     def run(self):
         if self.login_data is None:
             self.login()
+        if self.stopped:
+            return None
         contact_db = pymongo.MongoClient()["python-smartqq-client"]
         self.contact_manager = ContactDatabaseManager(contact_db, self.login_data, self.session,
                                                       identify_string=self.db_identify_string)
-        # self.contact_manager.get_data()
         self.group_manager = GroupDatabaseManager(contact_db, self.login_data, self.session,
                                                   identify_string=self.db_identify_string)
-        # self.group_manager.get_data()
         self.env["contact_manager"] = self.contact_manager
         self.env["group_manager"] = self.group_manager
         if self.login_done_handler is not None:

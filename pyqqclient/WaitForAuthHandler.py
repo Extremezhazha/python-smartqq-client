@@ -46,7 +46,6 @@ class WaitForAuthHandler(LoginStepHandler):
         def response_handler(response: Response):
             login_state = response.content.decode("utf-8")
             if "已失效" in login_state:
-                print("barcode fail")
                 raise BarcodeExpiredException
             if "成功" in login_state:
                 login_data = login_state.split(",")
