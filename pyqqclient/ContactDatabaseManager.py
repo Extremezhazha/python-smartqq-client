@@ -9,8 +9,9 @@ import json
 class ContactDatabaseManager(DatabaseManager):
     def __init__(self, mongo_database: database.Database, login_data: {},
                  session: Session, contact_collection_string="contact",
-                 category_collection_string="category", identify_string="global"):
-        super().__init__(mongo_database, login_data)
+                 category_collection_string="category", identify_string="global",
+                 retrieve_handler=None):
+        super().__init__(mongo_database, login_data, retrieve_handler=retrieve_handler)
         self.contact_collection = self.mongo_database[contact_collection_string]
         self.category_collection = self.mongo_database[category_collection_string]
         self.session = session
@@ -28,10 +29,13 @@ class ContactDatabaseManager(DatabaseManager):
         self.clear()
         self.session.headers.update({"Referer": "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2"})
         self.session.headers.update({"Origin": "http://d1.web2.qq.com"})
-        result = self.session.post(
+        response = self.session.post(
             "http://s.web2.qq.com/api/get_user_friends2",
             data={"r": json.dumps(self.data_r)}
-        ).json()["result"]
+        ).json()
+        if self.retrieve_handler is not None:
+            self.retrieve_handler(response)
+        result = response["result"]
         friends = result["friends"]
         marknames = result["marknames"]
         info = result["info"]

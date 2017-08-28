@@ -9,8 +9,8 @@ import json
 class GroupDatabaseManager(DatabaseManager):
     def __init__(self, mongo_database: database.Database, login_data: {}, session: Session,
                  group_collection_string="groups", group_member_collection_string="group_member",
-                 identify_string="global"):
-        super().__init__(mongo_database, login_data)
+                 identify_string="global", retrieve_handler=None):
+        super().__init__(mongo_database, login_data, retrieve_handler=retrieve_handler)
         self.session = session
         self.group_collection = self.mongo_database[group_collection_string]
         self.group_member_collection = self.mongo_database[group_member_collection_string]
@@ -37,10 +37,11 @@ class GroupDatabaseManager(DatabaseManager):
         self.clear()
         self.session.headers.update({"Referer": "http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2"})
         self.session.headers.update({"Origin": "http://d1.web2.qq.com"})
-        result = self.session.post(
+        response = self.session.post(
             "http://s.web2.qq.com/api/get_group_name_list_mask2",
             data={"r": json.dumps(self.data_r)}
-        ).json()["result"]
+        ).json()
+        result = response["result"]
         gnamelist = result["gnamelist"]
         for group in gnamelist:
             self.group_collection.insert_one({"code": group["code"], "gid": group["gid"],
@@ -50,11 +51,14 @@ class GroupDatabaseManager(DatabaseManager):
     def get_group_member_data(self, gcode: str, gid: str):
         self.mem_clear(gid)
         self.session.headers.update({"Referer": "http://s.web2.qq.com/proxy.html?v=20130916001&callback=1&id=1"})
-        result = self.session.get("http://s.web2.qq.com/api/get_group_info_ext2?gcode=" +
-                                  str(gcode) +
-                                  "&vfwebqq=" +
-                                  self.login_data["vfwebqq"] +
-                                  "&t=0.1").json()["result"]
+        response = self.session.get("http://s.web2.qq.com/api/get_group_info_ext2?gcode=" +
+                                    str(gcode) +
+                                    "&vfwebqq=" +
+                                    self.login_data["vfwebqq"] +
+                                    "&t=0.1").json()
+        if self.retrieve_handler is not None:
+            self.retrieve_handler(response)
+        result = response["result"]
         minfo = result["minfo"]
         for member in minfo:
             self.group_member_collection.insert_one({

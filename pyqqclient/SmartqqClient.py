@@ -82,9 +82,10 @@ class SmartqqClient:
 
     def message_preprocess(self, data):
         message = data.json()
+        logger.info(message)
         if ("retcode" in message) and message["retcode"] != 0:
             if message["retcode"] == 103:
-                logger.info(OnlineChecker.check_online(self.login_data, self.session).content)
+                logger.info(OnlineChecker.check_online(self.login_data, self.session))
             raise MessageErrcodeException
         if "result" not in message:
             raise MessageErrcodeException
@@ -93,7 +94,8 @@ class SmartqqClient:
     def __init__(self, login_data=None, barcode_handler=None,
                  friend_message_handler=None, group_message_handler=None, passing_env=False,
                  login_done_handler=None, login_exception_handler=None,
-                 db_identify_string=None):
+                 db_identify_string=None, contact_data_response_handler=None,
+                 group_data_response_handler=None):
         self.session = requests.Session()
         self.login_pipeline = SmartqqLoginPipeline(
             self.session,
@@ -121,6 +123,8 @@ class SmartqqClient:
         self.login_data = login_data
         self.db_identify_string = db_identify_string
         self.login_done_handler = login_done_handler
+        self.contact_data_response_handler = contact_data_response_handler
+        self.group_data_response_handler = group_data_response_handler
 
     def login(self):
         self.login_data, dispose = self.login_pipeline.run()
@@ -131,10 +135,15 @@ class SmartqqClient:
         if self.stopped:
             return None
         contact_db = pymongo.MongoClient()["python-smartqq-client"]
-        self.contact_manager = ContactDatabaseManager(contact_db, self.login_data, self.session,
-                                                      identify_string=self.db_identify_string)
-        self.group_manager = GroupDatabaseManager(contact_db, self.login_data, self.session,
-                                                  identify_string=self.db_identify_string)
+        self.contact_manager = ContactDatabaseManager(
+            contact_db, self.login_data, self.session,
+            identify_string=self.db_identify_string,
+            retrieve_handler=self.contact_data_response_handler
+        )
+        self.group_manager = GroupDatabaseManager(
+            contact_db, self.login_data, self.session,
+            identify_string=self.group_data_response_handler
+        )
         self.env["contact_manager"] = self.contact_manager
         self.env["group_manager"] = self.group_manager
         if self.login_done_handler is not None:

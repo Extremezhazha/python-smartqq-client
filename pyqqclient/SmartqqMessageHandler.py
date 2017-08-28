@@ -28,16 +28,6 @@ class SmartqqMessageHandler(MessageHandler):
 
     @staticmethod
     def print_all_handler(message_preprocess = None, friend_message_handler=None, group_message_handler=None):
-
-        # def message_preprocess(data):
-        #     message = data.json()
-        #     if "errcode" in message:
-        #         print(message)
-        #         raise MessageErrcodeException
-        #     if "result" not in message:
-        #         print(message)
-        #         raise MessageErrcodeException
-        #     return message["result"][0]
         result = SmartqqMessageHandler(message_preprocess) if message_preprocess is not None else SmartqqMessageHandler()
         result.add_handler(SmartqqMessageHandler.friend_message_filter,
                            friend_message_handler if friend_message_handler is not None

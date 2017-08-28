@@ -13,12 +13,13 @@ class DatabaseManager:
             "clientid" in data
         )
 
-    def __init__(self, mongo_database: database.Database, login_data: {}):
+    def __init__(self, mongo_database: database.Database, login_data: {}, retrieve_handler=None):
         if not DatabaseManager.check_login_data_exist(login_data):
             raise FaultyLoginDataException
         else:
             self.login_data = login_data
         self.mongo_database = mongo_database
+        self.retrieve_handler = retrieve_handler
 
 
 def delkey(source, *keys):
