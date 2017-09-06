@@ -9,15 +9,21 @@ from .SmartqqMessageHandler import SmartqqMessageHandler
 from .Logger import logger
 from .MessageErrcodeException import MessageErrcodeException
 from .OnlineChecker import OnlineChecker
+from .LoginExpiredException import LoginExpiredException
 
 
 class SmartqqClient:
     def handler_wrapper(self, orig_handler):
-        return lambda message: ((orig_handler(message, self.env) if self.passing_env else orig_handler(message)),
-                                self.stopped)[1]
+        return lambda message: (
+            True if self.stopped else
+            ((orig_handler(message, self.env) if self.passing_env else orig_handler(message)), False)[1]
+        )
 
     def raw_handler_wrapper(self, orig_handler):
-        return lambda info: (orig_handler(info), self.stopped)[1]
+        return lambda data: (
+            True if self.stopped else
+            (orig_handler(data), False)[1]
+        )
 
     @staticmethod
     def get_group_name(group_info):
@@ -86,6 +92,8 @@ class SmartqqClient:
         if ("retcode" in message) and message["retcode"] != 0:
             if message["retcode"] == 103:
                 logger.info(OnlineChecker.check_online(self.login_data, self.session))
+            if message["retcode"] == 1000001:
+                raise LoginExpiredException
             raise MessageErrcodeException
         if "result" not in message:
             raise MessageErrcodeException
@@ -95,7 +103,7 @@ class SmartqqClient:
                  friend_message_handler=None, group_message_handler=None, passing_env=False,
                  login_done_handler=None, login_exception_handler=None,
                  db_identify_string=None, contact_data_response_handler=None,
-                 group_data_response_handler=None):
+                 group_data_response_handler=None, message_exception_handler=None):
         self.session = requests.Session()
         self.login_pipeline = SmartqqLoginPipeline(
             self.session,
@@ -125,6 +133,16 @@ class SmartqqClient:
         self.login_done_handler = login_done_handler
         self.contact_data_response_handler = contact_data_response_handler
         self.group_data_response_handler = group_data_response_handler
+        self.message_exception_handler = (
+            self.raw_handler_wrapper(message_exception_handler) if message_exception_handler is not None
+            else lambda ex: (
+                logger.error("raised {exception_class} ({exception_docstring}): {exception_message}"
+                             .format(exception_class=ex.__class__,
+                                     exception_docstring=ex.__doc__,
+                                     exception_message=str(ex)
+                                     ))
+                , self.stopped)[1]
+        )
 
     def login(self):
         self.login_data, dispose = self.login_pipeline.run()
@@ -166,13 +184,7 @@ class SmartqqClient:
         polling = PollingHandler(
             message_grabber, self.message_handler,
             pass_through_exceptions={},
-            exception_handler=lambda ex: (
-                logger.error("raised {exception_class} ({exception_docstring}): {exception_message}"
-                             .format(exception_class=ex.__class__,
-                                     exception_docstring=ex.__doc__,
-                                     exception_message=str(ex)
-                                     ))
-                , self.stopped)[1]
+            exception_handler=self.message_exception_handler
         )
         polling.run()
 
