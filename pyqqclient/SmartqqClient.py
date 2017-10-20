@@ -164,6 +164,7 @@ class SmartqqClient:
         )
         self.env["contact_manager"] = self.contact_manager
         self.env["group_manager"] = self.group_manager
+        self.env["uin"] = self.login_data["uin"]
         if self.login_done_handler is not None:
             self.login_done_handler()
 
